@@ -51,10 +51,6 @@ for session in session_list:
     if session['routedspoof'] == 'unknown':
         continue
 
-    # Filter ASes who did not make the claim
-    if session['asn4'] not in as_with_sav:
-        continue
-
     ipv4 = session['client4']
     # ISO-8601 date
     timestamp = session['timestamp']
@@ -75,6 +71,10 @@ for session in session_list:
         # Store in dict if it does not filter spoof packet
         if session['routedspoof'] == 'received':
             ipv4_to_timestamp[ipv4] = date
+
+    # Filter ASes who did not make the claim
+    if session['asn4'] not in as_with_sav:
+        ipv4_to_timestamp.pop(ipv4, None)
 
 # Dump to output.txt
 with open('output.txt', mode='wt', encoding='utf-8') as file:
