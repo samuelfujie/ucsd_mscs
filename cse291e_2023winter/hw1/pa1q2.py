@@ -21,9 +21,8 @@ with open(cache_file) as file:
 session_list = json.loads(file_contents)
 
 # Load country code
-# with open('input.txt') as file:
-#     country = file.read()
-country = 'usa'
+with open('input.txt') as file:
+    country = file.read()
 
 # Process the cache
 ipv4_to_timestamp = {}
