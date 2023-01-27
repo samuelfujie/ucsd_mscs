@@ -11,8 +11,18 @@ Professor: KC Claffy
 
 from collections import defaultdict
 
+import gzip
+
+# Upzip the gzip file
+gzip_file_name = '20221001.as-org2info.txt.gz'
+data_file_name = '2r0221001.as-org2info.txt'
+
+with gzip.open(gzip_file_name, 'rb') as file:
+    with open(data_file_name, 'wb') as output_file:
+        output_file.write(file.read())
+
 # removing the new line characters
-with open('20221001.as-org2info.txt') as f:
+with open(data_file_name) as f:
     lines = [line.rstrip() for line in f]
 
 orgname_to_ids = defaultdict(set)
