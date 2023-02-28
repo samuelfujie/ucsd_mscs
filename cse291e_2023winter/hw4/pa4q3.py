@@ -25,7 +25,7 @@ MANRS_core = set()
 
 t1_providers = set()
 
-p2c = defaultdict(set)
+p2c = defaultdict(list)
 
 
 '''
@@ -71,11 +71,18 @@ for byte_line in bz2.BZ2File(rel_bz2_file_name, 'rb'):
                     t1_providers.add(cell)
 
 
-    # Provider-Customer link
-    else:
-        cells = string_line.split('|')
-        if cells[-1] == '-1':
-            p2c[cells[0]].add(cells[1])
+for byte_line in bz2.BZ2File(rel_bz2_file_name, 'rb'):
+    # convert byte string into regular string line
+    string_line = byte_line.decode("utf-8").strip()
+
+    cells = string_line.split('|')
+
+    # provider-customer link
+    if cells[-1] == '-1':
+        p2c[cells[0]].append(cells[1])
+
+        # if cells[1] == '268218':
+        #     print("======== Provider: {} | Customer: {}".format(cells[0], cells[1]))
 
 
 '''
@@ -95,24 +102,36 @@ Step 5: Repeat step (4) until the size of MANRS Core stops increasing.
 '''
 
 queue = deque(list(MANRS_core))
-visited = set()
 
 while queue:
     curr_as = queue.popleft()
-    visited.add(curr_as)
-
+    # BFS
     for customer in p2c[curr_as]:
-        if customer in MANRS_ases and customer not in visited:
+        if customer in MANRS_ases and customer not in MANRS_core:
             queue.append(customer)
             MANRS_core.add(customer)
 
+# if '268218' in MANRS_core:
+#     print("----------> 268218 FOUND IN CORE!!!!!!")
+'''
+Step 6: Find all direct customers of the MANRS Core, 
+        i.e, of ASes in the MANRS core.
+'''
+
+direct_customers = set()
+
+for asn in MANRS_core:
+    for customer in p2c[asn]:
+        # if asn == '52892':
+        #     print(p2c[asn])
+        direct_customers.add(customer)
+
 
 '''
-Step 6: Print the AS numbers, each separated by a newline, into output.txt. 
-        The ordering of AS numbers does not matter. The autograder expects 
-        the output file to be in the same directory as your python file.
+Step 7: Print the AS numbers, each separated by a newline, into output.txt.
 '''
 
 # Dump to output.txt
 with open('output.txt', mode='wt', encoding='utf-8') as file:
-    file.write('\n'.join(list(MANRS_core)))
+    file.write('\n'.join(list(direct_customers)))
+print(len(direct_customers))

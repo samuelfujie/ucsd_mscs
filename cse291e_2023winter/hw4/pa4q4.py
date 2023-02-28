@@ -13,6 +13,7 @@ from collections import defaultdict, deque
 
 import bz2
 import csv
+import gzip
 
 
 isp_csv_file_name = 'manrs_isp_20230221.csv'
@@ -108,11 +109,68 @@ while queue:
 
 
 '''
-Step 6: Print the AS numbers, each separated by a newline, into output.txt. 
-        The ordering of AS numbers does not matter. The autograder expects 
-        the output file to be in the same directory as your python file.
+Step 6: Find all direct customers of the MANRS Core, 
+        i.e, of ASes in the MANRS core.
+'''
+
+direct_customers = set()
+
+for asn in MANRS_core:
+    for customer in p2c[asn]:
+        direct_customers.add(customer)
+
+
+'''
+Step 7: Identify the MANRS Core Customers based in the U.S
+'''
+
+# Upzip the gzip file
+gzip_file_name = '20230101.as-org2info.txt.gz'
+data_file_name = '20230101.as-org2info.txt'
+
+# with gzip.open(gzip_file_name, 'rb') as file:
+#     with open(data_file_name, 'wb') as output_file:
+#         output_file.write(file.read())
+
+# removing the new line characters
+with open(data_file_name) as f:
+    lines = [line.rstrip() for line in f]
+
+id_to_country = {}
+asn_to_id = {}
+
+for line in lines:
+    cells = line.split('|')
+
+    # organization entry: org_id -> country
+    if len(cells) == 5:
+        org_id = cells[0]
+        country = cells[3]
+
+        id_to_country[org_id] = country
+    
+    # AS number entry: org_id -> AS numbers
+    if len(cells) == 6:
+        as_num = cells[0]
+        org_id = cells[3]
+
+        asn_to_id[as_num] = org_id
+
+US_customers = set()
+
+for asn in direct_customers:
+    if asn in asn_to_id:
+        org_id = asn_to_id[asn]
+        if org_id in id_to_country:
+            country = id_to_country[org_id]
+            if country == 'US':
+                US_customers.add(asn)
+
+
+'''
+Step 8: Print the AS numbers, each separated by a newline, into output.txt.
 '''
 
 # Dump to output.txt
 with open('output.txt', mode='wt', encoding='utf-8') as file:
-    file.write('\n'.join(list(MANRS_core)))
+    file.write('\n'.join(list(US_customers)))

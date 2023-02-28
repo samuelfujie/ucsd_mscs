@@ -13,6 +13,7 @@ from collections import defaultdict, deque
 
 import bz2
 import csv
+import gzip
 
 
 isp_csv_file_name = 'manrs_isp_20230221.csv'
@@ -108,11 +109,53 @@ while queue:
 
 
 '''
-Step 6: Print the AS numbers, each separated by a newline, into output.txt. 
-        The ordering of AS numbers does not matter. The autograder expects 
-        the output file to be in the same directory as your python file.
+Step 6: Map the MANRS Core ASes to Organizations
+'''
+
+# Upzip the gzip file
+gzip_file_name = '20230101.as-org2info.txt.gz'
+data_file_name = '20230101.as-org2info.txt'
+
+with gzip.open(gzip_file_name, 'rb') as file:
+    with open(data_file_name, 'wb') as output_file:
+        output_file.write(file.read())
+
+# removing the new line characters
+with open(data_file_name) as f:
+    lines = [line.rstrip() for line in f]
+
+id_to_name = {}
+asn_to_id = {}
+
+for line in lines:
+    cells = line.split('|')
+
+    # organization entry: org_id -> org_name
+    if len(cells) == 5:
+        org_id = cells[0]
+        org_name = cells[2]
+
+        id_to_name[org_id] = org_name
+    
+    # AS number entry: org_id -> AS numbers
+    if len(cells) == 6:
+        as_num = cells[0]
+        org_id = cells[3]
+
+        asn_to_id[as_num] = org_id
+
+MANRS_orgs = set()
+
+for asn in MANRS_core:
+    org_id = asn_to_id[asn]
+    org_name = id_to_name[org_id]
+    MANRS_orgs.add(org_name)
+
+
+'''
+Step 7: Print the organization names, each separated by a newline, into output.txt
 '''
 
 # Dump to output.txt
 with open('output.txt', mode='wt', encoding='utf-8') as file:
-    file.write('\n'.join(list(MANRS_core)))
+    file.write('\n'.join(list(MANRS_orgs)))
